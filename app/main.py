@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from app.database.database import SessionLocal
+from sqlalchemy import text
 
 app = FastAPI(
     title="AI Ticket Automation API",
@@ -12,3 +14,14 @@ def health_check():
         "message": "Welcome to the AI Ticket Automation API",
         "status": "healthy"
     }
+
+@app.get("/users")
+def get_users():
+    db = SessionLocal()
+
+    try:
+        users = db.execute(text("SELECT * FROM users"))
+        return users.mappings().all()
+
+    finally:
+        db.close()
