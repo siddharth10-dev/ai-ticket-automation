@@ -103,15 +103,6 @@ def create_ticket(request_body:tickets.TicketCreate):
         db.close()
 
 
-@app.get("/view_tickets")
-def view_tickets():
-    db=SessionLocal()
-    try:
-        tickets = db.execute(text("SELECT * FROM tickets"))
-        return tickets.mappings().all()
-    finally:
-        db.close()
-
 @app.get("/ticket/{id}")
 def get_ticket(id:int):
     db=SessionLocal()
@@ -122,3 +113,53 @@ def get_ticket(id:int):
         db.close()
 
 
+@app.get("/ticket_details/{id}")
+def get_details(id: int):
+    db = SessionLocal()
+
+    try:
+        result = db.execute(
+            text("""
+                SELECT
+                    t.id,
+                    t.title,
+                    t.description,
+                    t.status,
+                    a.category,
+                    a.priority,
+                    a.draft_response,
+                    a.confidence_score
+                FROM tickets t
+                LEFT JOIN ai_analysis a
+                    ON t.id = a.ticket_id
+                WHERE t.id = :id
+            """),
+            {"id": id}
+        )
+
+        return result.mappings().first()
+
+    finally:
+        db.close()
+
+@app.get("/all_tickets")
+def get_all_tickets():
+    db=SessionLocal()
+    try:
+        tickets = db.execute(text("""
+            SELECT 
+                t.id, 
+                t.title, 
+                t.description, 
+                t.status, 
+                a.category, 
+                a.priority, 
+                a.draft_response, 
+                a.confidence_score 
+            FROM tickets t 
+            LEFT JOIN ai_analysis a 
+                ON t.id = a.ticket_id
+        """))
+        return tickets.mappings().all()
+    finally:
+        db.close()
