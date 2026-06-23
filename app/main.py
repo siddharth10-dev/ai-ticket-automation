@@ -1,3 +1,4 @@
+from app.services.ai_service import analyze_ticket
 from app.schemas import tickets
 from app.schemas import user
 from fastapi import FastAPI
@@ -55,17 +56,45 @@ def create_user(request_body:user.UserCreate):
 def create_ticket(request_body:tickets.TicketCreate):
     db=SessionLocal()
     try:
-        db.execute(text("INSERT INTO tickets (user_id, title, description) VALUES (:user_id, :title, :description)"), {
+        # 1. Save Ticket first and commit
+        ticket = db.execute(text("INSERT INTO tickets (user_id, title, description) VALUES (:user_id, :title, :description) RETURNING id"), {
             "user_id": request_body.user_id,
             "title": request_body.title,
             "description": request_body.description
         })
+        ticket_id = ticket.scalar()
         db.commit()
+
+        # 2. Analyze Ticket & Save AI Analysis (isolated from ticket creation flow)
+        analysis = None
+        try:
+            analysis_res = analyze_ticket(request_body.description)
+            if analysis_res["status"] == "success":
+                analysis = analysis_res["analysis"]
+                db.execute(text("""
+                    INSERT INTO ai_analysis (ticket_id, category, priority, draft_response, confidence_score) 
+                    VALUES (:ticket_id, :category, :priority, :draft_response, :confidence_score)
+                """), {
+                    "ticket_id": ticket_id,
+                    "category": analysis['category'],
+                    "priority": analysis['priority'],
+                    "draft_response": analysis['draft_response'],
+                    "confidence_score": analysis['confidence_score']
+                })
+                db.commit()
+            else:
+                print(f"AI analysis returned error status: {analysis_res.get('message')}")
+        except Exception as ai_err:
+            print(f"AI analysis failed: {ai_err}")
+
         return {
             "message": "Ticket created successfully",
+            "id": ticket_id,
+            "analysis": analysis,
             "status": "success"
         }
     except Exception as e:
+        db.rollback()
         return {
             "message": str(e),
             "status": "error"
@@ -83,7 +112,7 @@ def view_tickets():
     finally:
         db.close()
 
-@app.get("/ticket{id}")
+@app.get("/ticket/{id}")
 def get_ticket(id:int):
     db=SessionLocal()
     try:
@@ -92,5 +121,4 @@ def get_ticket(id:int):
     finally:
         db.close()
 
-    
 
