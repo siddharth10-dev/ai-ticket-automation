@@ -30,11 +30,11 @@ const Navbar = () => {
         
         <div className="flex items-center gap-3 cursor-pointer">
           <div className="text-right hidden md:block">
-            <div className="text-sm font-semibold text-slate-900 leading-tight">Alex Sterling</div>
+            <div className="text-sm font-semibold text-slate-900 leading-tight">Siddharth Adep</div>
             <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Admin Account</div>
           </div>
           <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold overflow-hidden">
-            <img src="https://ui-avatars.com/api/?name=Alex+Sterling&background=0F766E&color=fff" alt="Avatar" />
+            <img src="https://ui-avatars.com/api/?name=Siddharth+Adep&background=0F766E&color=fff" alt="Avatar" />
           </div>
         </div>
       </div>
