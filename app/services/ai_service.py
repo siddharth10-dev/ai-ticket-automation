@@ -24,7 +24,12 @@ def analyze_ticket(description: str) -> dict:
                 "response_schema": TicketAnalysis,
             }
         )
-        analysis_data = json.loads(response.text)
+        text = response.text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.endswith("```"):
+            text = text[:-3]
+        analysis_data = json.loads(text.strip())
         return {
             "status": "success",
             "analysis": analysis_data

@@ -2,6 +2,7 @@ from app.services.ai_service import analyze_ticket
 from app.schemas import tickets
 from app.schemas import user
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.database.database import SessionLocal
 from sqlalchemy import text
 
@@ -9,6 +10,14 @@ app = FastAPI(
     title="AI Ticket Automation API",
     description="Automated support ticket processing and handling using AI",
     version="0.1.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.get("/")
